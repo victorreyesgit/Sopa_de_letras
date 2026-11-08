@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sopa de letras</title>
+<style>
+:root{--h:30;--card:rgba(255,255,255,.82);--pop:#fffdf8;--ink:#2b2118;--mut:#5f4f3d;--line:rgba(0,0,0,.18);--bga:hsl(var(--h) 90% 94%);--bgb:hsl(calc(var(--h) + 50) 90% 84%);--acc:hsl(var(--h) 75% 34%);--accink:#fff;--let:hsl(var(--h) 60% 20%);--ok:#15803d;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--card:rgba(36,29,23,.8);--pop:#2a231b;--ink:#f5ecdc;--mut:#cdbca3;--line:rgba(255,255,255,.28);--bga:hsl(var(--h) 40% 16%);--bgb:hsl(calc(var(--h) + 50) 45% 9%);--acc:hsl(var(--h) 85% 64%);--accink:#1c1712;--let:hsl(var(--h) 85% 90%);--ok:#4ade80;color-scheme:dark}}
+:root[data-theme="dark"]{--card:rgba(36,29,23,.8);--pop:#2a231b;--ink:#f5ecdc;--mut:#cdbca3;--line:rgba(255,255,255,.28);--bga:hsl(var(--h) 40% 16%);--bgb:hsl(calc(var(--h) + 50) 45% 9%);--acc:hsl(var(--h) 85% 64%);--accink:#1c1712;--let:hsl(var(--h) 85% 90%);--ok:#4ade80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;color:var(--ink);background:#f5e9d5;background:linear-gradient(160deg,var(--bga),var(--bgb)) fixed;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:18px;transition:background .6s}
+.wrap{max-width:600px;margin:0 auto;padding:10px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.top h1{margin:0;font-size:26px;text-align:center;flex:1}
+.top small{display:block;font-size:17px;font-weight:600;color:var(--mut)}
+button{font:inherit;font-weight:800;min-height:54px;padding:0 20px;border-radius:999px;border:0;background:var(--card);color:var(--ink);box-shadow:0 3px 10px rgba(0,0,0,.18);cursor:pointer;transition:transform .15s}
+button:active{transform:scale(.94)}
+button.main{background:var(--acc);color:var(--accink)}
+button:disabled{opacity:.3}
+.nav{width:56px;padding:0;font-size:22px}
+.info{text-align:center;color:var(--mut);margin:8px 0;font-weight:600}
+#words{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 14px;justify-content:center}
+.w{padding:6px 13px;border-radius:999px;border:2px solid hsl(var(--wh) 75% 55% / .7);background:var(--card);font-size:19px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;transition:all .4s}
+.w.done{background:hsl(var(--wh) 85% 60% / .45);text-decoration:line-through;text-decoration-thickness:3px;opacity:.75}
+#card{position:relative;padding:8px;border-radius:26px;background:var(--card);box-shadow:0 8px 26px rgba(0,0,0,.18);backdrop-filter:blur(6px)}
+#layer{position:absolute;inset:8px;pointer-events:none}
+.bar{position:absolute;pointer-events:none}
+.bar.new{animation:sweep .45s ease-out}
+@keyframes sweep{from{clip-path:inset(0 100% 0 0 round 99px)}to{clip-path:inset(0 0 0 0 round 99px)}}
+#selbar{display:none;background:hsl(45 100% 55% / .7)}
+#selbar.bad{background:hsl(0 85% 55% / .75)}
+#g{position:relative;z-index:1;display:grid;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--let);border-radius:50%}
+.c.h{animation:pulse .8s 4}
+@keyframes pulse{50%{transform:scale(1.4);background:var(--acc);color:var(--accink)}}
+.btns{display:flex;gap:10px;justify-content:center;margin:16px 0 10px}
+.hel{font-size:16px}
+#toast{position:fixed;left:50%;top:30%;transform:translateX(-50%);padding:14px 28px;border-radius:999px;font-size:32px;font-weight:800;color:#fff;background:hsl(var(--th) 70% 38%);box-shadow:0 8px 30px rgba(0,0,0,.35);pointer-events:none;opacity:0;z-index:20;white-space:nowrap}
+#toast.on{animation:toast 1.5s ease both}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,14px) scale(.7)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}25%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px)}}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+#ov.on{display:flex}
+#ov div{background:var(--pop);border-radius:24px;padding:28px;text-align:center;max-width:340px;animation:toast2 .5s ease}
+@keyframes toast2{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+#ov h2{margin:0 0 8px;font-size:32px}
+.big{display:block;font-size:60px;line-height:1.1}
+#ov.up div{border:5px solid hsl(45 100% 55%)}
+#ov.up .big{font-size:84px;animation:bounce .7s infinite alternate}
+#ov.up h2{font-size:36px;color:var(--acc)}
+@keyframes bounce{to{transform:translateY(-14px) rotate(-8deg) scale(1.1)}}
+#ov p{margin:0 0 18px;font-size:20px}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+#cf i{position:absolute;top:-20px;width:10px;height:16px;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 id="title"></h1>
+  </div>
+  <div class="info" id="info"></div>
+  <div id="words"></div>
+  <div id="card"><div id="layer"><div class="bar" id="selbar"></div></div><div id="g"></div></div>
+  <div class="btns">
+    <button class="main" id="hint">💡 Pista</button>
+  </div>
+  <div class="info hel">Toca la primera letra y después la última, o arrastra el dedo por la palabra. Puede estar en cualquier dirección.</div>
+</div>
+<div id="toast"></div>
+<div id="cf"></div>
+<div id="ov"><div>
+  <span class="big" id="ovemo">🎉</span><h2 id="ovh">¡Muy bien!</h2>
+  <p id="ovtxt"></p>
+  <button class="main" id="go">Siguiente nivel ▶</button>
+</div></div>
+
+<script>
+const THEMES=[
+{n:"Animales",e:"🐾",w:"Perro,Gato,Vaca,Cerdo,Oveja,Cabra,Caballo,Burro,Gallina,Pato,Conejo,Zorro,Lobo,Oso,Toro,León,Tigre,Elefante,Jirafa,Mono,Zebra,Águila,Búho,Ratón,Tortuga,Delfín,Ballena,Pulpo,Cigüeña,Ganso"},
+{n:"Frutas y verduras",e:"🍎",w:"Manzana,Pera,Uva,Plátano,Naranja,Limón,Fresa,Cereza,Melón,Sandía,Kiwi,Mango,Piña,Higo,Ciruela,Melocotón,Tomate,Patata,Cebolla,Ajo,Zanahoria,Lechuga,Pimiento,Judía,Guisante,Col,Pepino,Calabaza,Espinaca,Berenjena"},
+{n:"Cocina y comida",e:"🍳",w:"Pan,Queso,Jamón,Arroz,Leche,Huevo,Aceite,Sal,Azúcar,Pasta,Sopa,Tortilla,Paella,Croqueta,Postre,Café,Vino,Agua,Miel,Sartén,Cuchara,Tenedor,Cuchillo,Plato,Vaso,Olla,Horno,Cazuela,Fideos,Garbanzo"},
+{n:"Pueblo y naturaleza",e:"🌳",w:"Río,Monte,Campo,Árbol,Flor,Prado,Lago,Mar,Playa,Valle,Sierra,Bosque,Huerto,Granja,Iglesia,Plaza,Fuente,Puente,Camino,Era,Nube,Lluvia,Viento,Trigo,Olivo,Encina,Pino,Rosa,Piedra,Cueva"},
+{n:"Familia y hogar",e:"🏠",w:"Abuelo,Abuela,Padre,Madre,Hijo,Hija,Nieto,Nieta,Tío,Tía,Primo,Hermano,Sobrino,Casa,Cocina,Salón,Cama,Silla,Mesa,Sofá,Puerta,Ventana,Techo,Suelo,Armario,Lámpara,Espejo,Balcón,Patio,Jardín"},
+{n:"Oficios",e:"🛠️",w:"Médico,Maestro,Panadero,Cartero,Herrero,Albañil,Pintor,Cocinero,Pescador,Granjero,Sastre,Bombero,Policía,Juez,Actor,Cantante,Músico,Carpintero,Pastor,Zapatero,Librero,Taxista,Camarero,Piloto,Soldado,Artista,Escritor,Dentista,Chófer,Pastelero"},
+{n:"El cuerpo humano",e:"🧍",w:"Cabeza,Brazo,Mano,Pie,Pierna,Ojo,Nariz,Boca,Oreja,Dedo,Rodilla,Codo,Espalda,Pecho,Cuello,Hombro,Corazón,Cerebro,Pulmón,Estómago,Diente,Lengua,Pelo,Cara,Uña,Tobillo,Muñeca,Cadera,Hueso,Piel"},
+{n:"Juegos y aficiones",e:"♟️",w:"Fútbol,Tenis,Golf,Balón,Cartas,Ajedrez,Dominó,Pesca,Caza,Paseo,Baile,Música,Lectura,Pelota,Bolos,Ciclismo,Natación,Petanca,Radio,Cine,Teatro,Juego,Mus,Parchís,Damas,Puzle,Toros,Correr,Saltar,Cantar"},
+{n:"Ciudad y transporte",e:"🚌",w:"Coche,Tren,Avión,Barco,Bici,Moto,Autobús,Calle,Banco,Tienda,Mercado,Hospital,Colegio,Correos,Estación,Semáforo,Acera,Taxi,Metro,Puerto,Aeropuerto,Farmacia,Biblioteca,Museo,Parque,Hotel,Carretera,Túnel,Esquina,Billete"},
+{n:"Colores y tiempo",e:"🎨",w:"Rojo,Azul,Verde,Amarillo,Negro,Blanco,Gris,Marrón,Morado,Lunes,Martes,Jueves,Viernes,Sábado,Domingo,Verano,Invierno,Otoño,Primavera,Sol,Luna,Estrella,Nieve,Tormenta,Niebla,Hielo,Calor,Frío,Mañana,Tarde"}
+];
+const TH_HUE=[30,100,15,140,330,210,350,270,190,55];
+const HUES=[140,200,260,170,290,220,110,240,190,270,150,210,130]; // sin rojos ni amarillos
+const DIRS=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,-1],[1,-1],[-1,1]];
+const FILL="AAAAEEEEIIOOOUUSSNNRRLLDDTTCCMPBGVYQHFZJÑX";
+const MAXL=100;
+
+// Quita acentos pero conserva la Ñ
+function norm(s){
+  return s.toUpperCase().replace(/Ñ/g,"#").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/#/g,"Ñ");
+}
+function load(k){try{return parseInt(localStorage.getItem(k))||0}catch(e){return 0}}
+function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+
+let level=Math.min(load("sopa_max")||1,MAXL), maxLevel=level;
+let size=6, grid=[], words=[], theme=THEMES[0], cells=[];
+let start=null, tapStart=null, dragging=false, cur=[], hintTimer=null;
+
+const $=id=>document.getElementById(id);
+const g=$("g"), layer=$("layer"), selbar=$("selbar");
+
+function place(gr,o){
+  const L=o.key.length;
+  for(let t=0;t<300;t++){
+    const d=DIRS[Math.random()*8|0];
+    const r=Math.random()*size|0, c=Math.random()*size|0;
+    const er=r+d[0]*(L-1), ec=c+d[1]*(L-1);
+    if(er<0||er>=size||ec<0||ec>=size)continue;
+    let fit=true;
+    for(let i=0;i<L;i++){const ch=gr[r+d[0]*i][c+d[1]*i];if(ch&&ch!==o.key[i]){fit=false;break}}
+    if(!fit)continue;
+    for(let i=0;i<L;i++)gr[r+d[0]*i][c+d[1]*i]=o.key[i];
+    return true;
+  }
+  return false;
+}
+
+function build(){
+  size=6+Math.floor((level-1)/10);          // 10 niveles (una categoria cada uno) por tamano: 6x6 ... 15x15
+  const target=Math.min(2*size-6,20);       // 6 palabras en 6x6, 10 en 8x8, hasta 20
+  const ti=(level-1)%THEMES.length;
+  theme=THEMES[ti];
+  document.documentElement.style.setProperty("--h",TH_HUE[ti]);
+  for(let n=target;n>=4;n--){
+    for(let attempt=0;attempt<40;attempt++){
+      const pool=shuffle(theme.w.split(",").filter(w=>norm(w).length<=size));
+      const chosen=[];
+      for(const w of pool){
+        if(chosen.length>=n)break;
+        const k=norm(w);
+        if(chosen.some(o=>o.key.includes(k)||k.includes(o.key)))continue;
+        chosen.push({txt:w,key:k,found:false});
+      }
+      if(chosen.length<n)continue;
+      chosen.sort((a,b)=>b.key.length-a.key.length);
+      const gr=Array.from({length:size},()=>Array(size).fill(""));
+      if(chosen.every(o=>place(gr,o))){
+        for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(!gr[r][c])gr[r][c]=FILL[Math.random()*FILL.length|0];
+        chosen.forEach((o,i)=>o.hue=HUES[i%HUES.length]);
+        grid=gr;words=chosen;return;
+      }
+    }
+  }
+}
+
+function render(){
+  g.innerHTML="";
+  g.style.gridTemplateColumns="repeat("+size+",1fr)";
+  cells=[];
+  for(let r=0;r<size;r++){
+    cells.push([]);
+    for(let c=0;c<size;c++){
+      const d=document.createElement("div");
+      d.className="c";d.textContent=grid[r][c];
+      g.appendChild(d);cells[r].push(d);
+    }
+  }
+  fitFont();
+  $("title").innerHTML="Nivel "+level+"<small>"+theme.e+" "+theme.n+" · "+size+"×"+size+"</small>";
+  renderWords();
+  drawBars();
+}
+function fitFont(){g.style.fontSize=(g.clientWidth/size*0.56)+"px"}
+function renderWords(){
+  const done=words.filter(w=>w.found).length;
+  $("info").textContent="Encontradas: "+done+" de "+words.length;
+  $("words").innerHTML="";
+  words.slice().sort((a,b)=>a.txt.localeCompare(b.txt,"es")).forEach(w=>{
+    const s=document.createElement("span");
+    s.className="w"+(w.found?" done":"");
+    s.style.setProperty("--wh",w.hue);
+    s.textContent=(w.found?"✓ ":"")+w.txt;
+    $("words").appendChild(s);
+  });
+}
+
+// ---- barras de colores (resaltado suave) ----
+function barStyle(el,a,b){
+  const cs=g.clientWidth/size;
+  const x0=(a[1]+.5)*cs,y0=(a[0]+.5)*cs,x1=(b[1]+.5)*cs,y1=(b[0]+.5)*cs;
+  const len=Math.hypot(x1-x0,y1-y0)+cs*.84;
+  const ang=Math.atan2(y1-y0,x1-x0);
+  const s=el.style;
+  s.left=(x0-cs*.42)+"px";s.top=(y0-cs*.4)+"px";
+  s.width=len+"px";s.height=(cs*.8)+"px";
+  s.borderRadius=(cs*.4)+"px";
+  s.transformOrigin=(cs*.42)+"px "+(cs*.4)+"px";
+  s.transform="rotate("+ang+"rad)";
+}
+function drawBars(newW){
+  layer.querySelectorAll(".f").forEach(e=>e.remove());
+  words.filter(w=>w.found).forEach(w=>{
+    const b=document.createElement("div");
+    b.className="bar f"+(w===newW?" new":"");
+    b.style.background="hsl("+w.hue+" 85% 60% / .6)";
+    barStyle(b,w.sel[0],w.sel[1]);
+    layer.insertBefore(b,selbar);
+  });
+}
+
+function newGame(){
+  start=null;tapStart=null;dragging=false;cur=[];
+  selbar.style.display="none";
+  $("ov").classList.remove("on");
+  build();render();
+}
+
+// ---- seleccion ----
+function cellAt(e){
+  const rc=g.getBoundingClientRect();
+  const c=Math.max(0,Math.min(size-1,Math.floor((e.clientX-rc.left)/rc.width*size)));
+  const r=Math.max(0,Math.min(size-1,Math.floor((e.clientY-rc.top)/rc.height*size)));
+  return [r,c];
+}
+function line(a,b){
+  const dr=b[0]-a[0], dc=b[1]-a[1];
+  if(!dr&&!dc)return [a];
+  const s=Math.round(Math.atan2(dr,dc)/(Math.PI/4));
+  const d=[[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]][(s+8)%8];
+  let L=d[0]&&d[1]?Math.round((Math.abs(dr)+Math.abs(dc))/2):Math.max(Math.abs(dr),Math.abs(dc));
+  const out=(l)=>{const r=a[0]+d[0]*l,c=a[1]+d[1]*l;return r<0||r>=size||c<0||c>=size};
+  while(L>0&&out(L))L--;
+  const res=[];
+  for(let i=0;i<=L;i++)res.push([a[0]+d[0]*i,a[1]+d[1]*i]);
+  return res;
+}
+function paint(){
+  if(!cur.length){selbar.style.display="none";return}
+  selbar.classList.remove("bad");
+  selbar.style.display="block";
+  barStyle(selbar,cur[0],cur[cur.length-1]);
+}
+function toast(w){
+  const t=$("toast");
+  t.textContent="¡"+w.txt.toUpperCase()+"! ✨";
+  t.style.setProperty("--th",w.hue);
+  t.classList.remove("on");void t.offsetWidth;t.classList.add("on");
+}
+function submit(sel){
+  cur=[];paint();
+  tapStart=null;
+  if(sel.length<2)return;
+  const key=sel.map(p=>grid[p[0]][p[1]]).join("");
+  const rev=key.split("").reverse().join("");
+  const w=words.find(o=>!o.found&&(o.key===key||o.key===rev));
+  if(w){
+    w.found=true;
+    w.sel=[sel[0],sel[sel.length-1]];
+    sel.forEach(p=>cells[p[0]][p[1]].classList.remove("h"));
+    drawBars(w);
+    renderWords();
+    toast(w);
+    if(words.every(o=>o.found))win();
+  }else{
+    selbar.classList.add("bad");
+    selbar.style.display="block";
+    barStyle(selbar,sel[0],sel[sel.length-1]);
+    setTimeout(()=>{if(!cur.length){selbar.style.display="none";selbar.classList.remove("bad")}},450);
+  }
+}
+function confetti(n){
+  const box=$("cf");box.innerHTML="";
+  for(let i=0;i<(n||60);i++){
+    const s=document.createElement("i");
+    s.style.cssText="left:"+(Math.random()*100)+"%;background:hsl("+(Math.random()*360|0)+" 90% 60%);animation-delay:"+(Math.random()*.8)+"s;animation-duration:"+(2+Math.random()*1.5)+"s";
+    box.appendChild(s);
+  }
+  setTimeout(()=>{box.innerHTML=""},4800);
+}
+const sizeOf=l=>6+Math.floor((l-1)/10);
+const PRAISE=["¡Muy bien!","¡Genial!","¡Bien hecho!","¡Fantástico!"];
+const UP=["¡Así se hace!","¡Eres un crack!","¡Imparable!","¡Qué máquina!","¡Maestro de las letras!","¡Increíble!","¡Leyenda viva!","¡Genio total!","¡El rey de la sopa!"];
+function win(){
+  if(level>=maxLevel&&level<MAXL){maxLevel=level+1;save("sopa_max",maxLevel)}
+  const last=level>=MAXL;
+  const up=!last&&sizeOf(level+1)>size;
+  const ov=$("ov");
+  ov.classList.toggle("up",up||last);
+  if(last){
+    $("ovemo").textContent="👑";$("ovh").textContent="¡Campeón de campeones!";
+    $("ovtxt").textContent="¡Has completado los 100 niveles!";$("go").textContent="Volver al nivel 1";
+  }else if(up){
+    const ns=sizeOf(level+1);
+    $("ovemo").textContent="🚀";$("ovh").textContent=UP[ns-7];
+    $("ovtxt").textContent="¡Subes de dificultad! Ahora los tableros son de "+ns+"×"+ns+" y hay más palabras.";
+    $("go").textContent="¡Vamos allá! ▶";
+  }else{
+    $("ovemo").textContent="🎉";$("ovh").textContent=PRAISE[Math.random()*PRAISE.length|0];
+    $("ovtxt").textContent="Has encontrado todas las palabras. ¡Nivel "+level+" completado!";$("go").textContent="Siguiente nivel ▶";
+  }
+  setTimeout(()=>{ov.classList.add("on");confetti(up||last?150:60)},1100);
+}
+
+g.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  try{g.setPointerCapture(e.pointerId)}catch(_){}
+  const p=cellAt(e);
+  if(tapStart){submit(line(tapStart,p));dragging=false;return}
+  start=p;dragging=true;cur=[p];paint();
+});
+g.addEventListener("pointermove",e=>{
+  if(!dragging)return;
+  cur=line(start,cellAt(e));paint();
+});
+g.addEventListener("pointerup",()=>{
+  if(!dragging)return;
+  dragging=false;
+  if(cur.length>1){submit(cur)}
+  else{tapStart=start;cur=[start];paint()}
+});
+g.addEventListener("pointercancel",()=>{dragging=false;cur=[];paint()});
+
+// ---- botones ----
+$("hint").onclick=()=>{
+  const left=words.filter(w=>!w.found);
+  if(!left.length)return;
+  const w=left[Math.random()*left.length|0];
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++)for(const d of DIRS){
+    let ok=true;
+    for(let i=0;i<w.key.length;i++){
+      const rr=r+d[0]*i,cc=c+d[1]*i;
+      if(rr<0||rr>=size||cc<0||cc>=size||grid[rr][cc]!==w.key[i]){ok=false;break}
+    }
+    if(ok){
+      const el=cells[r][c];
+      el.classList.remove("h");void el.offsetWidth;el.classList.add("h");
+      clearTimeout(hintTimer);hintTimer=setTimeout(()=>el.classList.remove("h"),3500);
+      return;
+    }
+  }
+};
+$("go").onclick=()=>{level=level>=MAXL?1:level+1;newGame()};
+window.addEventListener("resize",()=>{fitFont();drawBars()});
+
+newGame();
+</script>
+</body>
+</html>
