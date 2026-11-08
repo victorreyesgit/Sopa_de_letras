@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sopa de letras</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f97316">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sopa">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <style>
 :root{--h:30;--card:rgba(255,255,255,.82);--pop:#fffdf8;--ink:#2b2118;--mut:#5f4f3d;--line:rgba(0,0,0,.18);--bga:hsl(var(--h) 90% 94%);--bgb:hsl(calc(var(--h) + 50) 90% 84%);--acc:hsl(var(--h) 75% 34%);--accink:#fff;--let:hsl(var(--h) 60% 20%);--ok:#15803d;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--card:rgba(36,29,23,.8);--pop:#2a231b;--ink:#f5ecdc;--mut:#cdbca3;--line:rgba(255,255,255,.28);--bga:hsl(var(--h) 40% 16%);--bgb:hsl(calc(var(--h) + 50) 45% 9%);--acc:hsl(var(--h) 85% 64%);--accink:#1c1712;--let:hsl(var(--h) 85% 90%);--ok:#4ade80;color-scheme:dark}}
@@ -344,6 +351,7 @@ $("go").onclick=()=>{level=level>=MAXL?1:level+1;newGame()};
 window.addEventListener("resize",()=>{fitFont();drawBars()});
 
 newGame();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}))}
 </script>
 </body>
 </html>
