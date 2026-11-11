@@ -133,6 +133,31 @@ function place(gr,o){
   return false;
 }
 
+// Coloca la palabra donde mas se cruce con otras (en direcciones distintas) y reparte las direcciones
+function place2(gr,ax,used,o){
+  const L=o.key.length, opts=[];
+  for(let di=0;di<8;di++){
+    const d=DIRS[di], bit=1<<(di>>1);
+    for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+      const er=r+d[0]*(L-1), ec=c+d[1]*(L-1);
+      if(er<0||er>=size||ec<0||ec>=size)continue;
+      let ov=0, ok=true;
+      for(let i=0;i<L;i++){
+        const rr=r+d[0]*i, cc=c+d[1]*i, ch=gr[rr][cc];
+        if(ch){if(ch!==o.key[i]||(ax[rr][cc]&bit)){ok=false;break}ov++}
+      }
+      if(ok)opts.push({r:r,c:c,di:di,s:Math.min(ov,2)*4-used[di]*1.2+Math.random()*3});
+    }
+  }
+  if(!opts.length)return false;
+  let b=opts[0];
+  for(const p of opts)if(p.s>b.s)b=p;
+  const d=DIRS[b.di], bit=1<<(b.di>>1);
+  for(let i=0;i<L;i++){const rr=b.r+d[0]*i,cc=b.c+d[1]*i;gr[rr][cc]=o.key[i];ax[rr][cc]|=bit}
+  used[b.di]++;
+  return true;
+}
+
 function build(){
   size=6+Math.floor((level-1)/10);          // 10 niveles (una categoria cada uno) por tamano: 6x6 ... 15x15
   const target=Math.min(2*size-6,20);       // 6 palabras en 6x6, 10 en 8x8, hasta 20
@@ -152,8 +177,18 @@ function build(){
       if(chosen.length<n)continue;
       chosen.sort((a,b)=>b.key.length-a.key.length);
       const gr=Array.from({length:size},()=>Array(size).fill(""));
-      if(chosen.every(o=>place(gr,o))){
-        for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(!gr[r][c])gr[r][c]=FILL[Math.random()*FILL.length|0];
+      const ax=Array.from({length:size},()=>Array(size).fill(0));
+      const used=Array(8).fill(0);
+      if(chosen.every(o=>place2(gr,ax,used,o))){
+        // trampas: trozos de palabras que se quedan a medias
+        for(let k=0;k<size;k++){
+          const w=chosen[Math.random()*chosen.length|0], cut=w.key.length>5?2:1;
+          const dk=Math.random()<.5?w.key.slice(0,w.key.length-cut):w.key.slice(cut);
+          if(dk.length>=3&&!chosen.some(o=>o.key===dk||o.key===dk.split("").reverse().join("")))place2(gr,ax,used,{key:dk});
+        }
+        // relleno con letras de las propias palabras para que cueste distinguirlas
+        const pool=chosen.map(o=>o.key).join("")+"AEIOUNRSTL";
+        for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(!gr[r][c])gr[r][c]=pool[Math.random()*pool.length|0];
         chosen.forEach((o,i)=>o.hue=HUES[i%HUES.length]);
         grid=gr;words=chosen;return;
       }
