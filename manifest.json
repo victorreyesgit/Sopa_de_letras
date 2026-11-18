@@ -1,12 +1,12 @@
 {
   "name": "Sopa de letras",
+  "id": "/vr-sopa_de_letras",
   "short_name": "Sopa",
   "description": "Sopa de letras en espanol con 100 niveles",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#fbe9d0",
   "theme_color": "#f97316",
   "icons": [
